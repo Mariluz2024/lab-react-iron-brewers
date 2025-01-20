@@ -1,56 +1,76 @@
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
-import Search from "../components/Search";
-import beersJSON from "./../assets/beers.json";
-
-
+import axios from "axios";
 
 function AllBeersPage() {
-  // Mock initial state, to be replaced by data from the API. Once you retrieve the list of beers from the Beers API store it in this state variable.
-  const [beers, setBeers] = useState(beersJSON);
+  const [beers, setBeers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  useEffect(() => {
+    const fetchBeers = async () => {
+      try {
+        const response = await axios.get("https://ih-beers-api2.herokuapp.com/beers");
+        setBeers(response.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching beers:", err);
+        setError("Failed to fetch beers. Please try again later.");
+        setLoading(false);
+      }
+    };
 
+    fetchBeers();
+  }, []);
 
-  // TASKS:
-  // 1. Set up an effect hook to make a request to the Beers API and get a list with all the beers.
-  // 2. Use axios to make a HTTP request.
-  // 3. Use the response data from the Beers API to update the state variable.
+  if (loading) {
+    return <p style={{ textAlign: "center", marginTop: "20px" }}>Loading...</p>;
+  }
 
+  if (error) {
+    return <p style={{ textAlign: "center", color: "red" }}>{error}</p>;
+  }
 
-
-  // The logic and the structure for the page showing the list of beers. You can leave this as it is for now.
   return (
-    <>
-      <Search />
-
-      <div className="d-inline-flex flex-wrap justify-content-center align-items-center w-100 p-4">
-        {beers &&
-          beers.map((beer, i) => {
-            return (
-              <div key={i}>
-                <Link to={"/beers/" + beer._id}>
-                  <div className="card m-2 p-2 text-center" style={{ width: "24rem", height: "18rem" }}>
-                    <div className="card-body">
-                      <img
-                        src={beer.image_url}
-                        style={{ height: "6rem" }}
-                        alt={"image of" + beer.name}
-                      />
-                      <h5 className="card-title text-truncate mt-2">{beer.name}</h5>
-                      <h6 className="card-subtitle mb-3 text-muted">
-                        <em>{beer.tagline}</em>
-                      </h6>
-                      <p className="card-text">
-                        Created by: {beer.contributed_by}
-                      </p>
-                    </div>
-                  </div>
+    <div style={{ padding: "20px" }}>
+      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>All Beers</h1>
+      <div style={{ display: "grid", gap: "20px" }}>
+        {beers.map((beer) => (
+          <div
+            key={beer._id}
+            style={{
+              display: "flex",
+              gap: "20px",
+              border: "1px solid #ccc",
+              borderRadius: "8px",
+              padding: "10px",
+              alignItems: "center",
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            <Link to={`/beers/${beer._id}`} style={{ textDecoration: "none", color: "inherit" }}>
+              <img
+                src={beer.image_url}
+                alt={beer.name}
+                style={{ maxWidth: "50px", maxHeight: "150px" }}
+              />
+            </Link>
+            <div>
+              <h2 style={{ margin: "0 0 10px" }}>
+                <Link to={`/beers/${beer._id}`} style={{ textDecoration: "none", color: "inherit" }}>{beer.name}
                 </Link>
-              </div>
-            );
-          })}
+              </h2>
+              <p style={{ margin: "0 0 5px", color: "#555" }}>
+                <em>{beer.tagline}</em>
+              </p>
+              <p style={{ margin: "0", fontSize: "0.9em", color: "#777" }}>
+                <strong>Created by:</strong> {beer.contributed_by}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
-    </>
+    </div>
   );
 }
 
